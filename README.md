@@ -1,4 +1,5 @@
-PROJETO INTERADOR - FICHA TÉCNICA
+PROJETO INTERADOR SENAC - FICHA TÉCNICA
+Curso Programador de Sistemas
 
 Equipe
 1. Eliete
