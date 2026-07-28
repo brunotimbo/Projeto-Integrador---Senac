@@ -30,25 +30,67 @@ cursor.execute('''CREATE TABLE IF NOT EXISTS produtos(
         ''')
 conexao.commit()
 
+def exibir_menu():
+
+        print("""\n====== MENU ======\n
+O que deseja fazer?\n
+1. Listar
+2. Cadastrar
+3. Buscar
+4. Atualizar
+5. Excluir""")
+
+        opcao = (input("\nEscolha a opção: "))
+
+        if opcao == '1':
+            listar_ingredientes()
+            
+        elif opcao == '2':
+            cadastrar_ingrediente()
+
+        elif opcao == '3':
+            buscar_ingrediente()            
+
+        elif opcao == '4': 
+            atualizar_ingrediente()
+
+        elif opcao == '5':
+            excluir_ingrediente()
+        else:
+            print("Opção inválida!") 
+
 # Inserir dados na tabela ingredientes
-def inserir_dados(ingrediente):
+
+def listar_ingredientes():
+        cursor.execute('''SELECT ingrediente FROM ingredientes''')
+
+def cadastrar_ingrediente(ingrediente):
 
         cursor.execute('''INSERT INTO ingredientes (nome_ingrediente)
         VALUES (?)''', (ingrediente,))
 
         # Confirmar a transação
         conexao.commit()
+        print(f"\nIngrediente {ingrediente} inserido.")
 
+
+def buscar_ingrediente():           
+        pass
+
+def atualizar_ingrediente():
+        pass
+
+def excluir_ingrediente():
+        pass
 
 while True:
 
         ingrediente = input("Digite o ingrediente (0 para sair): ")
-        inserir_dados(ingrediente)
 
         if ingrediente == '0':
                 break
         else:
-                inserir_dados(ingrediente)
+                cadastrar_ingrediente(ingrediente)
 
                 
 
