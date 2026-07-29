@@ -61,7 +61,21 @@ def exibir_menu():
 
 def listar_ingredientes():
 
+        cursor.execute('''SELECT COUNT(nome_ingrediente) FROM ingredientes WHERE nome_ingrediente IS'''" NOT NULL;")
         
+        quantidade = cursor.fetchone()[0]
+
+        if quantidade > 0:
+                cursor.execute("SELECT nome_ingrediente FROM ingredientes")
+
+                resultados = cursor.fetchall()
+
+                for linha in resultados:
+
+                        print(linha[0])
+
+        else:
+                print("A coluna está vazia ou só contém valores nulos.")
 
         cursor.execute('''SELECT nome_ingrediente FROM ingredientes''')
 
@@ -76,8 +90,7 @@ def cadastrar_ingrediente():
                 if ingrediente != '0':
 
                         # Consulta com SELECT EXISTS e parâmetro seguro (?) para evitar SQL Injection
-                        cursor.execute(
-                                '''SELECT EXISTS(SELECT 1 FROM ingredientes WHERE nome_ingrediente = ? LIMIT 1)''', (ingrediente,)
+                        cursor.execute('''SELECT EXISTS(SELECT 1 FROM ingredientes WHERE nome_ingrediente = ? LIMIT 1)''', (ingrediente,)
                         )
 
                         # Recupera o resultado da consulta
@@ -106,7 +119,7 @@ def buscar_ingrediente():
 
                         # Consulta com SELECT EXISTS e parâmetro seguro (?) para evitar SQL Injection
                         cursor.execute(
-                                '''SELECT EXISTS(SELECT 1 FROM ingredientes WHERE nome_ingrediente = ? LIMIT 1)''', (ingrediente,)
+                               '''SELECT EXISTS(SELECT 1 FROM ingredientes WHERE nome_ingrediente = ? LIMIT 1)''', (ingrediente,)
                         )
 
                         # Recupera o resultado da consulta
@@ -125,7 +138,31 @@ def atualizar_ingrediente():
         pass
 
 def excluir_ingrediente():
-        pass
+
+        while True:
+
+                ingrediente = input("\nDigite o ingrediente a ser deletado (0 para voltar): ")
+
+                if ingrediente != '0':
+
+                        cursor.execute(
+                               '''SELECT EXISTS(SELECT 1 FROM ingredientes WHERE nome_ingrediente = ? LIMIT 1)''', (ingrediente,)
+                        )
+
+                        resultado = cursor.fetchone()
+
+                        if resultado[0] == 1:
+                                cursor.execute(
+                                        #'''DELETE FROM ingredientes WHERE nome_ingrediente = ?''', (ingrediente,)
+                                        '''DELETE FROM ingredientes WHERE id = 4'''
+                                )
+                                conexao.commit()
+                                print(f"O ingrediente '{ingrediente}' foi excluido.")
+                        else:
+                                print(f"O ingrediente '{ingrediente}' não está cadastrado.")
+                else:
+                       break
+
 
 while True:
 
