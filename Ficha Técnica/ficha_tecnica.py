@@ -12,28 +12,26 @@ cursor.execute('''CREATE TABLE IF NOT EXISTS Ficha_Tecnica(
         Preco_Comprado REAL,
         Quantidade_Usada INTEGER,
         Unidade TEXT,
-        Preco_Gasto REAL
-        )
+        Preco_Gasto REAL)
         ''')
 
 #cria tabela ingredientes
 cursor.execute('''CREATE TABLE IF NOT EXISTS ingredientes(
         ID INTEGER PRIMARY KEY,
-        nome_ingrediente TEXT NOT NULL )
+        nome_ingrediente TEXT NOT NULL)
         ''')
 
 #cria tabela produtos
 cursor.execute('''CREATE TABLE IF NOT EXISTS produtos(
         ID INTEGER PRIMARY KEY,
-        nome_produto TEXT NOT NULL
-        )
+        nome_produto TEXT NOT NULL)
         ''')
+
 conexao.commit()
 
 def exibir_menu():
 
-        print("""\n====== MENU ======\n
-O que deseja fazer?\n
+        print("""\n====== TABELA INGREDIENTES ======\n
 1. Listar
 2. Cadastrar
 3. Buscar
@@ -62,20 +60,66 @@ O que deseja fazer?\n
 # Inserir dados na tabela ingredientes
 
 def listar_ingredientes():
-        cursor.execute('''SELECT ingrediente FROM ingredientes''')
 
-def cadastrar_ingrediente(ingrediente):
+        
 
-        cursor.execute('''INSERT INTO ingredientes (nome_ingrediente)
-        VALUES (?)''', (ingrediente,))
+        cursor.execute('''SELECT nome_ingrediente FROM ingredientes''')
 
-        # Confirmar a transação
         conexao.commit()
-        print(f"\nIngrediente {ingrediente} inserido.")
 
+def cadastrar_ingrediente():
+
+        while True:
+
+                ingrediente = input("\nDigite o ingrediente a ser cadastrado (0 para voltar): ")
+
+                if ingrediente != '0':
+
+                        # Consulta com SELECT EXISTS e parâmetro seguro (?) para evitar SQL Injection
+                        cursor.execute(
+                                '''SELECT EXISTS(SELECT 1 FROM ingredientes WHERE nome_ingrediente = ? LIMIT 1)''', (ingrediente,)
+                        )
+
+                        # Recupera o resultado da consulta
+                        resultado = cursor.fetchone()
+
+                        # Se o primeiro valor da tupla for 1, o item existe
+                        if resultado[0] == 1:
+                                print(f"O ingrediente '{ingrediente}' já está cadastrado.")
+                        else:
+                                cursor.execute('''INSERT INTO ingredientes (nome_ingrediente) VALUES (?)''', (ingrediente,))
+                                
+                                # Confirmar a transação
+                                conexao.commit()
+                                print(f"Ingrediente '{ingrediente}' cadastrado.")
+
+                else:
+                       break
 
 def buscar_ingrediente():           
-        pass
+
+        while True:
+
+                ingrediente = input("\nDigite o ingrediente a ser procurado (0 para voltar): ")
+
+                if ingrediente != '0':
+
+                        # Consulta com SELECT EXISTS e parâmetro seguro (?) para evitar SQL Injection
+                        cursor.execute(
+                                '''SELECT EXISTS(SELECT 1 FROM ingredientes WHERE nome_ingrediente = ? LIMIT 1)''', (ingrediente,)
+                        )
+
+                        # Recupera o resultado da consulta
+                        resultado = cursor.fetchone()
+
+                        # Se o primeiro valor da tupla for 1, o item existe
+                        if resultado[0] == 1:
+                                print(f"O ingrediente '{ingrediente}' está cadastrado.")
+                        else:
+                                print(f"O ingrediente '{ingrediente}' não está cadastrado.")
+                else:
+                       break
+
 
 def atualizar_ingrediente():
         pass
@@ -85,16 +129,4 @@ def excluir_ingrediente():
 
 while True:
 
-        ingrediente = input("Digite o ingrediente (0 para sair): ")
-
-        if ingrediente == '0':
-                break
-        else:
-                cadastrar_ingrediente(ingrediente)
-
-                
-
-        
-
-
-
+        exibir_menu()
