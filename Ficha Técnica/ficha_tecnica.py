@@ -135,7 +135,31 @@ def buscar_ingrediente():
 
 
 def atualizar_ingrediente():
-        pass
+
+        while True:
+
+                ingrediente = input("\nDigite o ingrediente a ser atualizado (0 para voltar): ")
+
+                if ingrediente != '0':
+
+                        # Consulta com SELECT EXISTS e parâmetro seguro (?) para evitar SQL Injection
+                        cursor.execute(
+                        '''SELECT EXISTS(SELECT 1 FROM ingredientes WHERE nome_ingrediente = ? LIMIT 1)''', (ingrediente,)
+                        )
+
+                        # Recupera o resultado da consulta
+                        resultado = cursor.fetchone()
+
+                        # Se o primeiro valor da tupla for 1, o item existe
+                        if resultado[0] == 1:
+                                cursor.execute(
+                                       '''UPDATE ingredientes SET nome_ingrediente = ? WHERE nome = ?''', (novo_valor, ingrediente),
+                        )
+                        else:
+                                print(f"O ingrediente '{ingrediente}' não está cadastrado.")
+
+                else:
+                        break
 
 def excluir_ingrediente():
 
