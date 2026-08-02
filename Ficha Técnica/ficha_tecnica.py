@@ -75,11 +75,21 @@ def listar_ingredientes():
                         print(linha[0])
 
         else:
-                print("A coluna está vazia ou só contém valores nulos.")
+                print("\nNão há ingredientes cadastrados.")
 
-        cursor.execute('''SELECT nome_ingrediente FROM ingredientes''')
+        
 
-        conexao.commit()
+        while True:
+
+                opcao = input("\nDigite 0 para voltar: ")
+
+                if opcao == '0':
+
+                        exibir_menu()
+
+                else:
+
+                        print("\nOpção invalida.")
 
 def cadastrar_ingrediente():
 
@@ -144,7 +154,7 @@ def atualizar_ingrediente():
 
                         # Consulta com SELECT EXISTS e parâmetro seguro (?) para evitar SQL Injection
                         cursor.execute(
-                        '''SELECT EXISTS(SELECT 1 FROM ingredientes WHERE nome_ingrediente = ? LIMIT 1)''', (ingrediente,)
+                                '''SELECT EXISTS(SELECT 1 FROM ingredientes WHERE nome_ingrediente = ? LIMIT 1)''', (ingrediente,)
                         )
 
                         # Recupera o resultado da consulta
@@ -152,11 +162,19 @@ def atualizar_ingrediente():
 
                         # Se o primeiro valor da tupla for 1, o item existe
                         if resultado[0] == 1:
+
+                                novo_ingrediente = input("\nDigite o novo nome do ingrediente: ")
+
                                 cursor.execute(
-                                       '''UPDATE ingredientes SET nome_ingrediente = ? WHERE nome = ?''', (novo_valor, ingrediente),
-                        )
+                                       '''UPDATE ingredientes SET nome_ingrediente = ? WHERE nome_ingrediente d= ?''', (novo_ingrediente, ingrediente,)
+                                )
+
+                                conexao.commit()
+
+                                print("\nIngrediente atualizado!")
+
                         else:
-                                print(f"O ingrediente '{ingrediente}' não está cadastrado.")
+                                print(f"\nO ingrediente '{ingrediente}' não está cadastrado.")
 
                 else:
                         break
@@ -177,8 +195,7 @@ def excluir_ingrediente():
 
                         if resultado[0] == 1:
                                 cursor.execute(
-                                        #'''DELETE FROM ingredientes WHERE nome_ingrediente = ?''', (ingrediente,)
-                                        '''DELETE FROM ingredientes WHERE id = 4'''
+                                        '''DELETE FROM ingredientes WHERE nome_ingrediente = ?''', (ingrediente,)
                                 )
                                 conexao.commit()
                                 print(f"O ingrediente '{ingrediente}' foi excluido.")
@@ -186,7 +203,6 @@ def excluir_ingrediente():
                                 print(f"O ingrediente '{ingrediente}' não está cadastrado.")
                 else:
                        break
-
 
 while True:
 
