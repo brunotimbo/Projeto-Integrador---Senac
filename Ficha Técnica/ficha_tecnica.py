@@ -1,7 +1,8 @@
 import sqlite3
+import tkinter as tk
 
+# banco de dados
 conexao = sqlite3.connect('ficha_tecnica.db')
-
 cursor = conexao.cursor()
 
 # cria tabela ficha técnica
@@ -28,6 +29,12 @@ cursor.execute('''CREATE TABLE IF NOT EXISTS produtos(
         ''')
 
 conexao.commit()
+
+# interface
+janela = tk.TK()
+janela.title("Ficha Técnica")
+janela.geometry("800x800+100+100")
+janela.resizable(False, False)
 
 def exibir_menu():
 
