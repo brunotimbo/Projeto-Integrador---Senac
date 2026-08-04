@@ -1,7 +1,9 @@
+# importações
 import sqlite3
 import tkinter as tk
+from tkinter import ttk                                         #importar subbliboteca do tkinter para tabela
 
-# banco de dados
+# conexão com banco de dados
 conexao = sqlite3.connect('ficha_tecnica.db')
 cursor = conexao.cursor()
 
@@ -16,13 +18,13 @@ cursor.execute('''CREATE TABLE IF NOT EXISTS Ficha_Tecnica(
         Preco_Gasto REAL)
         ''')
 
-#cria tabela ingredientes
+# cria tabela ingredientes
 cursor.execute('''CREATE TABLE IF NOT EXISTS ingredientes(
         ID INTEGER PRIMARY KEY,
         nome_ingrediente TEXT NOT NULL)
         ''')
 
-#cria tabela produtos
+# cria tabela produtos
 cursor.execute('''CREATE TABLE IF NOT EXISTS produtos(
         ID INTEGER PRIMARY KEY,
         nome_produto TEXT NOT NULL)
@@ -30,11 +32,21 @@ cursor.execute('''CREATE TABLE IF NOT EXISTS produtos(
 
 conexao.commit()
 
-# interface
-janela = tk.TK()
-janela.title("Ficha Técnica")
-janela.geometry("800x800+100+100")
-janela.resizable(False, False)
+# limpa tabela 
+def limpa_tabela():
+
+        for item in tabela.get_children():
+                tabela.delete(item)
+
+def busca_dados_tabela():
+
+        cursor.execute("SELECT ID, nome_ingrediente FROM ingredientes")
+        linhas = cursor.fetchall()
+
+        for linha in linhas:
+               tabela.insert("", "end", values=linha)
+
+        conexao.close()
 
 def exibir_menu():
 
@@ -210,6 +222,43 @@ def excluir_ingrediente():
                                 print(f"O ingrediente '{ingrediente}' não está cadastrado.")
                 else:
                        break
+# criação da janela
+janela = tk.Tk()
+janela.title("Ficha Técnica")
+janela.geometry("400x400+100+100")
+janela.resizable(False, False)
+
+# label 1
+label_1 = tk.Label(janela, text="Menu")
+label_1.pack()
+
+# tabela
+colunas = ("ID", "Ingrediente")
+tabela = ttk.Treeview(janela, columns=colunas, show="headings")
+
+# cabeçalho da tabela
+tabela.heading("ID", text="ID")
+tabela.heading("Ingrediente", text="Ingrediente")
+tabela.column("ID", width=10)
+tabela.column("Ingrediente", width=200)
+
+tabela.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+
+# exibe dados na tabela
+busca_dados_tabela()
+
+botao_listar = tk.Button(janela, text="Listar", command=listar_ingredientes)
+botao_listar.pack()
+botao_cadastrar = tk.Button(janela, text="Cadastrar", command=cadastrar_ingrediente)
+botao_cadastrar.pack()
+botao_buscar = tk.Button(janela, text="Buscar", command=buscar_ingrediente)
+botao_buscar.pack()
+botao_atualizar = tk.Button(janela, text="Atualizar", command=atualizar_ingrediente)
+botao_atualizar.pack()
+botao_excluir = tk.Button(janela, text="Excluir", command=excluir_ingrediente)
+botao_excluir.pack()
+
+janela.mainloop()
 
 while True:
 
