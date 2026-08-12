@@ -46,13 +46,44 @@ def cadastrar_ingrediente():
 
 #buscar ingrediente
 def buscar_ingrediente():
+    global entry_busca_ingrediente
+
     ingrediente = entry_busca_ingrediente.get()
     conexao = sqlite3.connect("ficha_tecnica.db")
     cursor = conexao.cursor()
-    cursor.execute("SELECT FROM ingredientes (ingrediente) VALUES (?)", (ingrediente))
-    resultado = cursor.fetchone()    
+    cursor.execute("SELECT * From ingredientes WHERE ingrediente = ?", (ingrediente,))
+    resultado = cursor.fetchall()    
     conexao.commit()
     conexao.close()
+    print(resultado)
+    janela_top = tk.Toplevel()
+    janela_top.geometry("500x500")
+    janela_top.title("Resultado Busca")
+    janela_top.resizable(False, False)
+
+    tabela = ttk.Treeview(janela_top,columns=("id", "ingrediente") , show="headings", )
+    
+    # largura das colunas
+    tabela.column("id", width=5, anchor="w")  # Coluna 1 com 100 pixels
+    tabela.column("ingrediente", width=250, anchor="w")  # Coluna 2 com 250 pixels
+
+    # títulos das colunas
+    tabela.heading("id", text="ID")
+    tabela.heading("ingrediente", text="Ingredientes")
+
+    # exibe a tabela
+    tabela.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+
+    conexao = sqlite3.connect("ficha_tecnica.db")
+    cursor = conexao.cursor()
+    cursor.execute( "SELECT * FROM ingredientes WHERE ingrediente LIKE ?", (f"%{ingrediente}%",))
+    resultado = cursor.fetchall()
+
+    for linha in resultado:
+        tabela.insert('', tk.END, values=linha)
+
+
+    
     return resultado
 
 #atualizar ingrediente
@@ -81,6 +112,43 @@ def limpar_janela():
       for widget in janela.winfo_children():
             widget.destroy()
 
+def atualiza_tabela_ingredientes():
+
+    # Limpa a tabela antes de carregar novos dados
+    for item in tabela_ingredientes.get_children():
+        tabela_ingredientes.delete(item)
+
+    # Conecta ao banco de dados SQLite
+    conexao = sqlite3.connect("ficha_tecnica.db")
+    cursor = conexao.cursor()
+
+    # Busca os dados na tabela do banco
+    cursor.execute("SELECT id, nome, FROM ingredientes")
+    linhas = cursor.fetchall()
+
+  # Insere os dados na Treeview
+    for linha in linhas:
+        tabela_ingredientes.insert("", "end", values=linha)
+
+    conexao.close()
+
+
+# # Configuração da Janela Principal
+#     app = tk.Tk()
+#     app.title("Exibir SQLite no Tkinter")
+#     app.geometry("400x300")
+
+#     # Criação do Treeview (Tabela)
+#     colunas = ("ID", "Nome", "Idade")
+#     tree = ttk.Treeview(app, columns=colunas, show="headings")
+
+#     # Definindo os cabeçalhos
+#     for col in colunas:
+#     tree.heading(col, text=col)
+#     tree.column(col, width=100)
+
+#     tree.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+
 ##########################   INTERFACE   ##########################
 
 
@@ -100,11 +168,11 @@ def tela_ingredientes():
     limpar_janela()
 
     # frame da tela ingredientes
-    frame_ingredientes = tk.Frame(janela, borderwidth=1, relief="raised")
+    frame_ingredientes = tk.Frame(janela, borderwidth=1, relief="raised", bg="#FDC180")
     frame_ingredientes.pack(fill="both", expand=True)
 
     # título da tela ingredientes
-    label_titulo = tk.Label(frame_ingredientes, text="Ingredientes", font=("Arial", 16))
+    label_titulo = tk.Label(frame_ingredientes, text=" 🍴 Ingredientes 👨‍🍳", font=("Arial", 24), bg="#FDC180")
     label_titulo.pack(pady=10)
 
     frame_busca = tk.Frame(frame_ingredientes, borderwidth=1, relief="raised")
@@ -122,31 +190,39 @@ def tela_ingredientes():
     botao_pesquisar = tk.Button(frame_busca, text="Pesquisar", command=buscar_ingrediente)
     botao_pesquisar.pack(side="right", padx=10, pady=5)
 
-        
 
-    # tabela
-    colunas = ("ingrediente")
-    tabela_ingredientes = ttk.Treeview(frame_ingredientes, columns=colunas, show="headings")
+    estilo = ttk.Style()
+    estilo.theme_use("clam")
+    estilo.configure("Treeview.Heading", font=("Arial", 14, "bold"), background="#004c94", foreground="#f7941d")
+    estilo.configure("Treeview", rowheight=28, font=("Arial", 10))
 
-    # cabeçalho da tabela
-    tabela_ingredientes.heading("ingrediente", text="Ingrediente")
-    tabela_ingredientes.column("ingrediente", width=200)
-    tabela_ingredientes.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
 
-    # Limpa dados anteriores da Treeview
-    for linha in tabela_ingredientes.get_children():
-        tabela_ingredientes.delete(linha)
+    # cria tabela
+    tabela = ttk.Treeview(frame_ingredientes,columns=("id", "ingrediente") , show="headings", )
 
-    conexao = sqlite3.connect('ficha_tecnica.db')
+    # largura das colunas
+    tabela.column("id", width=5, anchor="w")  # Coluna 1 com 100 pixels
+    tabela.column("ingrediente", width=250, anchor="w")  # Coluna 2 com 250 pixels
+
+    # títulos das colunas
+    tabela.heading("id", text="ID")
+    tabela.heading("ingrediente", text="Ingredientes")
+
+    # exibe a tabela
+    tabela.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+
+    conexao = sqlite3.connect("ficha_tecnica.db")
     cursor = conexao.cursor()
-    cursor.execute("SELECT id, ingrediente FROM ingredientes")
-    linhas = cursor.fetchall()
+    cursor.execute("SELECT * FROM ingredientes")
+    resultado = cursor.fetchall()
 
-    for linha in linhas:
-        tabela_ingredientes.insert("", "end", values=linha)
+    for linha in resultado:
+        tabela.insert('', tk.END, values=linha)
+
+    # Seleciona as colunas id e ingrediente da tabela
+    cursor.execute("SELECT id, ingrediente FROM ingredientes")
 
     conexao.close()
-
 
 def tela_resultado_busca():
     limpar_janela()
