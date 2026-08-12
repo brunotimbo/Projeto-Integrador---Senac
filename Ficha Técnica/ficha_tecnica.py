@@ -76,18 +76,15 @@ def buscar_ingrediente():
 
     conexao = sqlite3.connect("ficha_tecnica.db")
     cursor = conexao.cursor()
-    cursor.execute( "SELECT * FROM ingredientes WHERE ingrediente LIKE ?", (f"%{ingrediente}%",))
+    cursor.execute("SELECT * FROM ingredientes WHERE ingrediente LIKE ?", (f"%{ingrediente}%",))
     resultado = cursor.fetchall()
 
     for linha in resultado:
-        tabela.insert('', tk.END, values=linha)
-
-
-    
+        tabela.insert('', tk.END, values=linha)    
     return resultado
 
 #atualizar ingrediente
-def atualiza_ingrediente(ingrediente):
+def atualizar_ingrediente(ingrediente):
     conexao = sqlite3.connect("ficha_tecnica.db")
     cursor = conexao.cursor()
     cursor.execute("UPDATE ingredientes SET ingrediente = ?", (ingrediente))
@@ -95,43 +92,174 @@ def atualiza_ingrediente(ingrediente):
     conexao.close()
 
 #deletar ingrediente
-def deleta_ingrediente(ingrediente):
+def deletar_ingrediente(ingrediente):
     conexao = sqlite3.connect("ficha_tecnica.db")
     cursor = conexao.cursor()
     cursor.execute("DELETE FROM ingredientes WHERE ingrediente = ?", (ingrediente))
     conexao.commit()
     conexao.close()
 
-#cadastrar ficha
-#buscar ficha
-#atualizar ficha
-#deletar ficha
-
 # limpar janela
 def limpar_janela():
       for widget in janela.winfo_children():
             widget.destroy()
 
-def atualiza_tabela_ingredientes():
-
-    # Limpa a tabela antes de carregar novos dados
+# limpa a tabela ingredientes
+def limpar_tabela_ingredientes():
+    
     for item in tabela_ingredientes.get_children():
         tabela_ingredientes.delete(item)
+
+# atualiza a tabela ingredientes
+def atualizar_tabela_ingredientes():
+
+    limpar_tabela_ingredientes()
 
     # Conecta ao banco de dados SQLite
     conexao = sqlite3.connect("ficha_tecnica.db")
     cursor = conexao.cursor()
-
-    # Busca os dados na tabela do banco
-    cursor.execute("SELECT id, nome, FROM ingredientes")
+    cursor.execute("SELECT id, ingrediente FROM ingredientes")
     linhas = cursor.fetchall()
 
-  # Insere os dados na Treeview
+    # Insere os dados na Treeview
     for linha in linhas:
         tabela_ingredientes.insert("", "end", values=linha)
 
     conexao.close()
 
+# deleta ingrediente da tabela ingrendientes
+def deletar_ingrediente():
+    selecionados = tabela_ingredientes.selection()
+    
+    if not selecionados:
+        messagebox.showwarning("Aviso", "Selecione uma linha para deletar.")
+        return
+    
+    # 1. Caixa de confirmação antes de alterar o banco de dados
+    confirmacao = messagebox.askyesno(
+        "Confirmar Exclusão", 
+        f"Tem certeza que deseja deletar {len(selecionados)} item(ns)?"
+    )
+    
+    # 2. Se o usuário clicar em "Não", interrompe a função
+    if not confirmacao:
+        return
+        
+    # 3. Se clicou em "Sim", o código abaixo continua e deleta
+    conexao = sqlite3.connect("ficha_tecnica.db")
+    cursor = conexao.cursor()
+    
+    for item in selecionados:
+        valores = tabela_ingredientes.item(item, "values")
+        id_registro = valores[0]
+        
+        cursor.execute("DELETE FROM ingredientes WHERE id = ?", (id_registro,))
+        tabela_ingredientes.delete(item)
+        
+    conexao.commit()
+    conexao.close()
+    messagebox.showinfo("Sucesso", "Registro(s) deletado(s) com sucesso!")
+
+# abre pop-up adicionar ingrediente
+def abrir_popup_adicionar_ingrediente():
+    popup_adicionar_ingrediente = tk.Toplevel()
+    popup_adicionar_ingrediente.title("Editar Ingrediente")
+    popup_adicionar_ingrediente.geometry("300x150")
+    # Bloqueia a janela principal até fechar o pop-up
+    popup_adicionar_ingrediente.grab_set()
+
+    # Elementos visuais do Pop-up
+    label = tk.Label(popup_adicionar_ingrediente, text="Nome do Ingrediente:")
+    label.pack(pady=10)
+
+    entry_adicionar_ingrediente = tk.Entry(popup_adicionar_ingrediente, width=30)
+    entry_adicionar_ingrediente.pack(pady=5)
+
+    def cadastrar_ingrediente_banco():
+        novo_ingrediente = entry_adicionar_ingrediente.get().strip()
+
+        if not novo_ingrediente:
+            messagebox.showwarning("Aviso", "O campo não pode ficar vazio!")
+            return
+        
+        else:
+            # Atualiza no Banco de Dados SQLite3
+            conexao = sqlite3.connect("ficha_tecnica.db")
+            cursor = conexao.cursor()
+            cursor.execute("INSERT INTO ingredientes (ingrediente) VALUES (?)", (novo_ingrediente,))
+            conexao.commit()
+            conexao.close()    
+
+            # Atualiza a linha visualmente na tabela Tkinter
+            atualizar_tabela_ingredientes()
+
+            # Fecha o pop-up e avisa o usuário
+            popup_adicionar_ingrediente.destroy()
+            messagebox.showinfo("Sucesso", "Ingrediente adicionado com sucesso.")
+
+    # Botão Salvar dentro do Pop-up
+    botao_salvar = tk.Button(popup_adicionar_ingrediente, text="Salvar", command=cadastrar_ingrediente_banco)
+    botao_salvar.pack(pady=15)
+
+
+# abre popup para edição do nome do ingrediente    
+def abrir_popup_editar_ingrediente():
+    # 1. Verifica se há uma linha selecionada
+    selecao = tabela_ingredientes.selection()
+    if not selecao:
+        messagebox.showwarning("Aviso", "Por favor, selecione um ingrediente para editar!")
+        return
+
+    # 2. Captura a linha selecionada e seus dados
+    item_id = selecao[0]
+    valores = tabela_ingredientes.item(item_id, "values")
+
+    # Supondo que a tabela tem: Coluna 0 (ID) e Coluna 1 (Nome)
+    id_ingrediente = valores[0]
+    nome_atual = valores[1]
+
+    # 3. Criação do pop-up editar ingrediente
+    popup_editar_ingrediente = tk.Toplevel()
+    popup_editar_ingrediente.title("Editar Ingrediente")
+    popup_editar_ingrediente.geometry("300x150")
+    # Bloqueia a janela principal até fechar o pop-up
+    popup_editar_ingrediente.grab_set()
+
+    # Elementos visuais do Pop-up
+    label = tk.Label(popup_editar_ingrediente, text="Nome do ingrediente:")
+    label.pack(pady=10)
+
+    entry_editar_ingrediente = tk.Entry(popup_editar_ingrediente, width=30)
+    entry_editar_ingrediente.pack(pady=5)
+    # Preenche o campo com o nome atual do ingrediente
+    entry_editar_ingrediente.insert(0, nome_atual)
+
+    def atualizar_ingrediente_banco():
+        # 4. Função interna para salvar os dados
+        novo_nome = entry_editar_ingrediente.get().strip()
+
+        if not novo_nome:
+            messagebox.showwarning("Aviso", "O nome não pode ficar vazio!")
+            return
+
+        else:
+            # Atualiza no Banco de Dados SQLite3
+            conexao = sqlite3.connect("ficha_tecnica.db")
+            cursor = conexao.cursor()
+            cursor.execute("UPDATE ingredientes SET ingrediente = ? WHERE id = ?", (novo_nome, id_ingrediente))
+            conexao.commit()
+            conexao.close()
+
+            # Atualiza a linha visualmente na tabela Tkinter
+            tabela_ingredientes.item(item_id, values=(id_ingrediente, novo_nome))
+
+            # Fecha o pop-up e avisa o usuário
+            popup_editar_ingrediente.destroy()
+            messagebox.showinfo("Sucesso", "Ingrediente atualizado com sucesso!")
+
+    # Botão Salvar dentro do Pop-up
+    botao_salvar = tk.Button(popup_editar_ingrediente, text="Salvar", command=atualizar_ingrediente_banco)
+    botao_salvar.pack(pady=15)
 
 # # Configuração da Janela Principal
 #     app = tk.Tk()
@@ -163,7 +291,7 @@ def tela_ficha():
 
 def tela_ingredientes():
 
-    global entry_busca_ingrediente
+    global entry_busca_ingrediente, tabela_ingredientes
 
     limpar_janela()
 
@@ -181,35 +309,40 @@ def tela_ingredientes():
     entry_busca_ingrediente = tk.Entry(frame_busca)
     entry_busca_ingrediente.pack(side="left", padx=10, pady=5)
 
-    botao_atualizar_tabela_ingredientes = tk.Button(frame_busca, text="Atualizar Lista")
+    # botões da tela ingredientes
+    botao_deletar_ingrediente = tk.Button(frame_busca, text="Deletar", command=deletar_ingrediente)
+    botao_deletar_ingrediente.pack(side="right", padx=10, pady=5)
+
+    botao_editar_ingrediente = tk.Button(frame_busca, text="Editar", command=abrir_popup_editar_ingrediente)
+    botao_editar_ingrediente.pack(side="right", padx=10, pady=5)
+
+    botao_atualizar_tabela_ingredientes = tk.Button(frame_busca, text="Atualizar Lista", command=atualizar_tabela_ingredientes)
     botao_atualizar_tabela_ingredientes.pack(side="right", padx=10, pady=5) 
 
-    botao_cadastrar = tk.Button(frame_busca, text="Adicionar", command=cadastrar_ingrediente)
-    botao_cadastrar.pack(side="right", padx=10, pady=5)
+    botao_cadastrar_ingrediente = tk.Button(frame_busca, text="Adicionar", command=abrir_popup_adicionar_ingrediente)
+    botao_cadastrar_ingrediente.pack(side="right", padx=10, pady=5)
 
-    botao_pesquisar = tk.Button(frame_busca, text="Pesquisar", command=buscar_ingrediente)
-    botao_pesquisar.pack(side="right", padx=10, pady=5)
-
+    botao_pesquisar_ingrediente = tk.Button(frame_busca, text="Pesquisar", command=buscar_ingrediente)
+    botao_pesquisar_ingrediente.pack(side="right", padx=10, pady=5)
 
     estilo = ttk.Style()
     estilo.theme_use("clam")
     estilo.configure("Treeview.Heading", font=("Arial", 14, "bold"), background="#004c94", foreground="#f7941d")
     estilo.configure("Treeview", rowheight=28, font=("Arial", 10))
 
-
     # cria tabela
-    tabela = ttk.Treeview(frame_ingredientes,columns=("id", "ingrediente") , show="headings", )
+    tabela_ingredientes = ttk.Treeview(frame_ingredientes,columns=("id", "ingrediente") , show="headings", )
 
     # largura das colunas
-    tabela.column("id", width=5, anchor="w")  # Coluna 1 com 100 pixels
-    tabela.column("ingrediente", width=250, anchor="w")  # Coluna 2 com 250 pixels
+    tabela_ingredientes.column("id", width=5, anchor="w")  # Coluna 1 com 100 pixels
+    tabela_ingredientes.column("ingrediente", width=250, anchor="w")  # Coluna 2 com 250 pixels
 
     # títulos das colunas
-    tabela.heading("id", text="ID")
-    tabela.heading("ingrediente", text="Ingredientes")
+    tabela_ingredientes.heading("id", text="ID")
+    tabela_ingredientes.heading("ingrediente", text="Ingredientes")
 
     # exibe a tabela
-    tabela.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+    tabela_ingredientes.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
 
     conexao = sqlite3.connect("ficha_tecnica.db")
     cursor = conexao.cursor()
@@ -217,7 +350,7 @@ def tela_ingredientes():
     resultado = cursor.fetchall()
 
     for linha in resultado:
-        tabela.insert('', tk.END, values=linha)
+        tabela_ingredientes.insert('', tk.END, values=linha)
 
     # Seleciona as colunas id e ingrediente da tabela
     cursor.execute("SELECT id, ingrediente FROM ingredientes")
@@ -234,7 +367,7 @@ def tela_resultado_busca():
 # cria a janela principal
 janela = tk.Tk()
 janela.title("Maedu")
-janela.geometry("500x500")
+janela.geometry("700x500")
 janela.resizable(False, False)
 
 tela_ingredientes()
@@ -251,191 +384,6 @@ janela.mainloop()
 
 ##########################   FRAME BUSCA   ##########################
 
-
-
-
-
-# def busca_dados_tabela():
-#         conexao = sqlite3.connect('ficha_tecnica.db')
-#         cursor = conexao.cursor()
-#         cursor.execute("SELECT ID, ingrediente FROM ingredientes")
-#         linhas = cursor.fetchall()
-
-#         for linha in linhas:
-#                tabela.insert("", "end", values=linha)
-
-#         conexao.close()
-
-# def exibir_menu():
-
-#         print("""\n====== TABELA INGREDIENTES ======\n
-# 1. Listar
-# 2. Cadastrar
-# 3. Buscar
-# 4. Atualizar
-# 5. Excluir""")
-
-#         opcao = (input("\nEscolha a opção: "))
-#         if opcao == '1':
-#             listar_ingredientes()            
-#         elif opcao == '2':
-#             cadastrar_ingrediente()
-#         elif opcao == '3':
-#             buscar_ingrediente()
-#         elif opcao == '4': 
-#             atualizar_ingrediente()
-#         elif opcao == '5':
-#             excluir_ingrediente()
-#         else:
-#             print("Opção inválida!") 
-
-# # Inserir dados na tabela ingredientes
-
-# def listar_ingredientes():
-#         cursor.execute('''SELECT COUNT(nome_ingrediente) FROM ingredientes WHERE nome_ingrediente IS'''" NOT NULL;")        
-#         quantidade = cursor.fetchone()[0]
-#         if quantidade > 0:
-#                 cursor.execute("SELECT nome_ingrediente FROM ingredientes")
-#                 resultados = cursor.fetchall()
-#                 for linha in resultados:
-#                         print(linha[0])
-#         else:
-#                 print("\nNão há ingredientes cadastrados.") 
-#         while True:
-#                 opcao = input("\nDigite 0 para voltar: ")
-#                 if opcao == '0':
-#                         exibir_menu()
-#                 else:
-#                         print("\nOpção invalida.")
-
-# def cadastrar_ingrediente():
-#         while True:
-#                 ingrediente = input("\nDigite o ingrediente a ser cadastrado (0 para voltar): ")
-#                 if ingrediente != '0':
-#                         # Consulta com SELECT EXISTS e parâmetro seguro (?) para evitar SQL Injection
-#                         cursor.execute('''SELECT EXISTS(SELECT 1 FROM ingredientes WHERE nome_ingrediente = ? LIMIT 1)''', (ingrediente,)
-#                         )
-#                         # Recupera o resultado da consulta
-#                         resultado = cursor.fetchone()
-#                         # Se o primeiro valor da tupla for 1, o item existe
-#                         if resultado[0] == 1:
-#                                 print(f"O ingrediente '{ingrediente}' já está cadastrado.")
-#                         else:
-#                                 cursor.execute('''INSERT INTO ingredientes (nome_ingrediente) VALUES (?)''', (ingrediente,))
-#                                 # Confirmar a transação
-#                                 conexao.commit()
-#                                 print(f"Ingrediente '{ingrediente}' cadastrado.")
-
-#                 else:
-#                        break
-# def buscar_ingrediente():           
-
-#         while True:
-#                 ingrediente = input("\nDigite o ingrediente a ser procurado (0 para voltar): ")
-#                 if ingrediente != '0':
-#                         # Consulta com SELECT EXISTS e parâmetro seguro (?) para evitar SQL Injection
-#                         cursor.execute(
-#                                '''SELECT EXISTS(SELECT 1 FROM ingredientes WHERE nome_ingrediente = ? LIMIT 1)''', (ingrediente,)
-#                         )
-#                         # Recupera o resultado da consulta
-#                         resultado = cursor.fetchone()
-#                         # Se o primeiro valor da tupla for 1, o item existe
-#                         if resultado[0] == 1:
-#                                 print(f"O ingrediente '{ingrediente}' está cadastrado.")
-#                         else:
-#                                 print(f"O ingrediente '{ingrediente}' não está cadastrado.")
-#                 else:
-#                        break
-
-
-# def atualizar_ingrediente():
-
-#         while True:
-
-#                 ingrediente = input("\nDigite o ingrediente a ser atualizado (0 para voltar): ")
-#                 if ingrediente != '0':
-#                         # Consulta com SELECT EXISTS e parâmetro seguro (?) para evitar SQL Injection
-#                         cursor.execute(
-#                                 '''SELECT EXISTS(SELECT 1 FROM ingredientes WHERE nome_ingrediente = ? LIMIT 1)''', (ingrediente,)
-#                         )
-#                         # Recupera o resultado da consulta
-#                         resultado = cursor.fetchone()
-#                         # Se o primeiro valor da tupla for 1, o item existe
-#                         if resultado[0] == 1:
-#                                 novo_ingrediente = input("\nDigite o novo nome do ingrediente: ")
-#                                 cursor.execute(
-#                                        '''UPDATE ingredientes SET nome_ingrediente = ? WHERE nome_ingrediente d= ?''', (novo_ingrediente, ingrediente,)
-#                                 )
-#                                 conexao.commit()
-#                                 print("\nIngrediente atualizado!")
-#                         else:
-#                                 print(f"\nO ingrediente '{ingrediente}' não está cadastrado.")
-#                 else:
-#                         break
-
-# def excluir_ingrediente():
-#         while True:
-#                 ingrediente = input("\nDigite o ingrediente a ser deletado (0 para voltar): ")
-#                 if ingrediente != '0':
-#                         cursor.execute(
-#                                '''SELECT EXISTS(SELECT 1 FROM ingredientes WHERE nome_ingrediente = ? LIMIT 1)''', (ingrediente,)
-#                         )
-#                         resultado = cursor.fetchone()
-#                         if resultado[0] == 1:
-#                                 cursor.execute(
-#                                         '''DELETE FROM ingredientes WHERE nome_ingrediente = ?''', (ingrediente,)
-#                                 )
-#                                 conexao.commit()
-#                                 print(f"O ingrediente '{ingrediente}' foi excluido.")
-#                         else:
-#                                 print(f"O ingrediente '{ingrediente}' não está cadastrado.")
-#                 else:
-#                        break
-
-# # criação da janela
-# janela = tk.Tk()
-# janela.title("Ficha Técnica")
-# janela.geometry("400x400+100+100")
-# janela.resizable(False, False)
-
-# # frame
-# frame_titulo = tk.Frame(janela)
-
-# # label 1
-# label_1 = tk.Label(janela, text="Ficha Técnica")
-# label_1.pack()
-
-# # tabela
-# colunas = ("ID", "Ingrediente")
-# tabela = ttk.Treeview(janela, columns=colunas, show="headings")
-
-# # cabeçalho da tabela
-# tabela.heading("ID", text="ID")
-# tabela.heading("Ingrediente", text="Ingrediente")
-# tabela.column("ID", width=10)
-# tabela.column("Ingrediente", width=200)
-# tabela.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
-
-# # exibe dados na tabela
-# busca_dados_tabela()
-
-# botao_cadastrar = tk.Button(janela, text="Cadastrar", command=cadastrar_ingrediente)
-# botao_cadastrar.pack()
-
-# botao_buscar = tk.Button(janela, text="Buscar", command=buscar_ingrediente)
-# botao_buscar.pack()
-
-# botao_atualizar = tk.Button(janela, text="Atualizar", command=atualizar_ingrediente)
-# botao_atualizar.pack()
-
-# botao_excluir = tk.Button(janela, text="Excluir", command=excluir_ingrediente)
-# botao_excluir.pack()
-
-# janela.mainloop()
-
-# while True:
-
-#         exibir_menu()
 
 
         
