@@ -44,44 +44,76 @@ def cadastrar_ingrediente():
     conexao.close()
     messagebox.showinfo("Ingrediente", "Ingrediente adicionado a lista.")
 
-#buscar ingrediente
-def buscar_ingrediente():
-    global entry_busca_ingrediente
+# #buscar ingrediente
+# def buscar_ingrediente():
+#     global entry_busca_ingrediente
 
-    ingrediente = entry_busca_ingrediente.get()
-    conexao = sqlite3.connect("ficha_tecnica.db")
-    cursor = conexao.cursor()
-    cursor.execute("SELECT * From ingredientes WHERE ingrediente = ?", (ingrediente,))
-    resultado = cursor.fetchall()    
-    conexao.commit()
-    conexao.close()
-    print(resultado)
-    janela_top = tk.Toplevel()
-    janela_top.geometry("500x500")
-    janela_top.title("Resultado Busca")
-    janela_top.resizable(False, False)
+#     ingrediente_procurado = entry_busca_ingrediente.get()
 
-    tabela = ttk.Treeview(janela_top,columns=("id", "ingrediente") , show="headings", )
+#     if not ingrediente_procurado:
+#         messagebox.showwarning("Aviso", "Selecione uma linha para deletar.")
+#         return
+
+#     conexao = sqlite3.connect("ficha_tecnica.db")
+#     cursor = conexao.cursor()
+#     cursor.execute("SELECT * From ingredientes WHERE ingrediente = ?", (ingrediente_procurado,))
+#     resultado = cursor.fetchall()    
+#     conexao.commit()
+#     conexao.close()
+#     print(resultado)
+#     janela_top = tk.Toplevel()
+#     janela_top.geometry("500x500")
+#     janela_top.title("Resultado Busca")
+#     janela_top.resizable(False, False)
+
+#     tabela = ttk.Treeview(janela_top,columns=("id", "ingrediente") , show="headings", )
     
-    # largura das colunas
-    tabela.column("id", width=5, anchor="w")  # Coluna 1 com 100 pixels
-    tabela.column("ingrediente", width=250, anchor="w")  # Coluna 2 com 250 pixels
+#     # largura das colunas
+#     tabela.column("id", width=5, anchor="w")  # Coluna 1 com 100 pixels
+#     tabela.column("ingrediente", width=250, anchor="w")  # Coluna 2 com 250 pixels
 
-    # títulos das colunas
-    tabela.heading("id", text="ID")
-    tabela.heading("ingrediente", text="Ingredientes")
+#     # títulos das colunas
+#     tabela.heading("id", text="ID")
+#     tabela.heading("ingrediente", text="Ingredientes")
 
-    # exibe a tabela
-    tabela.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+#     # exibe a tabela
+#     tabela.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
 
-    conexao = sqlite3.connect("ficha_tecnica.db")
-    cursor = conexao.cursor()
-    cursor.execute("SELECT * FROM ingredientes WHERE ingrediente LIKE ?", (f"%{ingrediente}%",))
-    resultado = cursor.fetchall()
+#     conexao = sqlite3.connect("ficha_tecnica.db")
+#     cursor = conexao.cursor()
+#     cursor.execute("SELECT * FROM ingredientes WHERE ingrediente LIKE ?", (f"%{ingrediente_procurado}%",))
+#     resultado = cursor.fetchall()
 
-    for linha in resultado:
-        tabela.insert('', tk.END, values=linha)    
-    return resultado
+#     for linha in resultado:
+#         tabela.insert('', tk.END, values=linha)    
+#     return resultado
+
+def pesquisar_ingrediente():
+
+    ingrediente_procurado = entry_busca_ingrediente.get().strip()
+
+    if not ingrediente_procurado:
+        messagebox.showwarning("Aviso", "O campo não pode ficar vazio!")
+
+    else:
+
+        conexao = sqlite3.connect("ficha_tecnica.db")
+        cursor = conexao.cursor()
+        cursor.execute("SELECT id, ingrediente FROM ingredientes WHERE ingrediente LIKE ?", ("%" + ingrediente_procurado + "%",),)
+        resultado = cursor.fetchall()
+        conexao.close()
+
+        # Se a pesquisa não retornar nada, você também pode avisar o usuário se quiser
+        if not resultado:
+            messagebox.showinfo("Informação", "Nenhum ingrediente encontrado com esse termo.")
+
+        limpar_tabela_ingredientes()
+
+
+        # Insere os resultados na tabela do Tkinter
+        for linha in resultado:
+            tabela_ingredientes.insert("", tk.END, values=linha)
+                
 
 #atualizar ingrediente
 def atualizar_ingrediente(ingrediente):
@@ -322,7 +354,7 @@ def tela_ingredientes():
     botao_cadastrar_ingrediente = tk.Button(frame_busca, text="Adicionar", command=abrir_popup_adicionar_ingrediente)
     botao_cadastrar_ingrediente.pack(side="right", padx=10, pady=5)
 
-    botao_pesquisar_ingrediente = tk.Button(frame_busca, text="Pesquisar", command=buscar_ingrediente)
+    botao_pesquisar_ingrediente = tk.Button(frame_busca, text="Pesquisar", command=pesquisar_ingrediente)
     botao_pesquisar_ingrediente.pack(side="right", padx=10, pady=5)
 
     estilo = ttk.Style()
