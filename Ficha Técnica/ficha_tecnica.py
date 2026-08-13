@@ -255,7 +255,7 @@ def tela_ingredientes():
     label_titulo = tk.Label(frame_ingredientes, text=" 🍴 Ingredientes 👨‍🍳", font=("Arial", 24), bg="#FDC180")
     label_titulo.pack(pady=10)
 
-    frame_menu_ingredientes = tk.Frame(frame_ingredientes, borderwidth=1, relief="raised")
+    frame_menu_ingredientes = tk.Frame(frame_ingredientes, borderwidth=1, relief="sunken" , bg="#80ACFD")
     frame_menu_ingredientes.pack(pady=10)
 
     # campo de busca de ingrdiente   
@@ -266,16 +266,16 @@ def tela_ingredientes():
     botao_ficha = tk.Button(frame_menu_ingredientes, text="Ficha Técnica", command=tela_ficha)
     botao_ficha.pack(side="right", padx=10, pady=5)
     
-    botao_deletar_ingrediente = tk.Button(frame_menu_ingredientes, text="Deletar", command=deletar_ingrediente)
+    botao_deletar_ingrediente = tk.Button(frame_menu_ingredientes, text="Deletar", command=deletar_ingrediente, bg="#da2222")
     botao_deletar_ingrediente.pack(side="right", padx=10, pady=5)
 
-    botao_editar_ingrediente = tk.Button(frame_menu_ingredientes, text="Editar", command=abrir_popup_editar_ingrediente)
+    botao_editar_ingrediente = tk.Button(frame_menu_ingredientes, text="Editar", command=abrir_popup_editar_ingrediente, bg="#dac722")
     botao_editar_ingrediente.pack(side="right", padx=10, pady=5)
 
-    botao_atualizar_tabela_ingredientes = tk.Button(frame_menu_ingredientes, text="Atualizar Lista", command=atualizar_tabela_ingredientes)
+    botao_atualizar_tabela_ingredientes = tk.Button(frame_menu_ingredientes, text="Mostrar Lista Completa", command=atualizar_tabela_ingredientes)
     botao_atualizar_tabela_ingredientes.pack(side="right", padx=10, pady=5) 
 
-    botao_cadastrar_ingrediente = tk.Button(frame_menu_ingredientes, text="Adicionar", command=abrir_popup_adicionar_ingrediente)
+    botao_cadastrar_ingrediente = tk.Button(frame_menu_ingredientes, text="Adicionar", command=abrir_popup_adicionar_ingrediente , bg="#22da50")
     botao_cadastrar_ingrediente.pack(side="right", padx=10, pady=5)
 
     botao_pesquisar_ingrediente = tk.Button(frame_menu_ingredientes, text="Pesquisar", command=pesquisar_ingrediente)
