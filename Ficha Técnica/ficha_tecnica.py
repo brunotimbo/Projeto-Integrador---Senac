@@ -255,27 +255,30 @@ def tela_ingredientes():
     label_titulo = tk.Label(frame_ingredientes, text=" 🍴 Ingredientes 👨‍🍳", font=("Arial", 24), bg="#FDC180")
     label_titulo.pack(pady=10)
 
-    frame_menu = tk.Frame(frame_ingredientes, borderwidth=1, relief="raised")
-    frame_menu.pack(pady=10)
+    frame_menu_ingredientes = tk.Frame(frame_ingredientes, borderwidth=1, relief="raised")
+    frame_menu_ingredientes.pack(pady=10)
 
     # campo de busca de ingrdiente   
-    entry_busca_ingrediente = tk.Entry(frame_menu)
+    entry_busca_ingrediente = tk.Entry(frame_menu_ingredientes)
     entry_busca_ingrediente.pack(side="left", padx=10, pady=5)
 
     # botões da tela ingredientes
-    botao_deletar_ingrediente = tk.Button(frame_menu, text="Deletar", command=deletar_ingrediente)
+    botao_ficha = tk.Button(frame_menu_ingredientes, text="Ficha Técnica", command=tela_ficha)
+    botao_ficha.pack(side="right", padx=10, pady=5)
+    
+    botao_deletar_ingrediente = tk.Button(frame_menu_ingredientes, text="Deletar", command=deletar_ingrediente)
     botao_deletar_ingrediente.pack(side="right", padx=10, pady=5)
 
-    botao_editar_ingrediente = tk.Button(frame_menu, text="Editar", command=abrir_popup_editar_ingrediente)
+    botao_editar_ingrediente = tk.Button(frame_menu_ingredientes, text="Editar", command=abrir_popup_editar_ingrediente)
     botao_editar_ingrediente.pack(side="right", padx=10, pady=5)
 
-    botao_atualizar_tabela_ingredientes = tk.Button(frame_menu, text="Atualizar Lista", command=atualizar_tabela_ingredientes)
+    botao_atualizar_tabela_ingredientes = tk.Button(frame_menu_ingredientes, text="Atualizar Lista", command=atualizar_tabela_ingredientes)
     botao_atualizar_tabela_ingredientes.pack(side="right", padx=10, pady=5) 
 
-    botao_cadastrar_ingrediente = tk.Button(frame_menu, text="Adicionar", command=abrir_popup_adicionar_ingrediente)
+    botao_cadastrar_ingrediente = tk.Button(frame_menu_ingredientes, text="Adicionar", command=abrir_popup_adicionar_ingrediente)
     botao_cadastrar_ingrediente.pack(side="right", padx=10, pady=5)
 
-    botao_pesquisar_ingrediente = tk.Button(frame_menu, text="Pesquisar", command=pesquisar_ingrediente)
+    botao_pesquisar_ingrediente = tk.Button(frame_menu_ingredientes, text="Pesquisar", command=pesquisar_ingrediente)
     botao_pesquisar_ingrediente.pack(side="right", padx=10, pady=5)
 
     estilo = ttk.Style()
@@ -323,7 +326,11 @@ def tela_ficha():
     label_titulo.pack(pady=10)
 
     frame_menu = tk.Frame(frame_ficha, borderwidth=1, relief="raised")
-    frame_menu.pack(pady=10)    
+    frame_menu.pack(pady=10)
+
+    # botões da tela ficha
+    botao_ingredientes = tk.Button(frame_menu, text="Ingredientes", command=tela_ingredientes)
+    botao_ingredientes.pack(side="right", padx=10, pady=5)    
 
 ##########################   INÍCIO   ##########################
 
