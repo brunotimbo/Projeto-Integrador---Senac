@@ -1,92 +1,39 @@
-# importações
+# blibliotecas e importações
 import sqlite3
 import tkinter as tk
-from tkinter import ttk                                         # importar subbliboteca do tkinter para tabela
 import tkinter.messagebox as messagebox                         # mensgens de aviso
+from tkinter import ttk                                         # importar subbliboteca do tkinter para tabela
+
 
 # variáveis globais
 entry_busca_ingrediente = None
 
-# conexão com banco de dados
-conexao = sqlite3.connect('ficha_tecnica.db')
-cursor = conexao.cursor()
-
-# cria tabela ficha técnica
-cursor.execute('''CREATE TABLE IF NOT EXISTS fichas(
-        id INTEGER PRIMARY KEY,
-        ingrediente TEXT NOT NULL,
-        quantidade_comprada INTEGER,
-        valor_comprado REAL,
-        quantidade_usada INTEGER,
-        unidade_medida TEXT,
-        valor_gasto REAL)
-        ''')
-
-# cria tabela ingredientes
-cursor.execute('''CREATE TABLE IF NOT EXISTS ingredientes(
-        id INTEGER PRIMARY KEY,
-        ingrediente TEXT NOT NULL)
-        ''')
-
-conexao.commit()
-conexao.close()
-
-##########################   CRUDs   ##########################
-
-#cadastrar ingrediente
-def cadastrar_ingrediente():
-    
-    ingrediente = entry_busca_ingrediente.get()
-    conexao = sqlite3.connect("ficha_tecnica.db")
+def conectar_banco_dados():
+    # conexão com banco de dados
+    conexao = sqlite3.connect('ficha_tecnica.db')
     cursor = conexao.cursor()
-    cursor.execute("INSERT INTO ingredientes (ingrediente) VALUES (?)", (ingrediente,))
+
+    # cria tabela ficha técnica
+    cursor.execute('''CREATE TABLE IF NOT EXISTS fichas(
+            id INTEGER PRIMARY KEY,
+            ingrediente TEXT NOT NULL,
+            quantidade_comprada INTEGER,
+            valor_comprado REAL,
+            quantidade_usada INTEGER,
+            unidade_medida TEXT,
+            valor_gasto REAL)
+            ''')
+
+    # cria tabela ingredientes
+    cursor.execute('''CREATE TABLE IF NOT EXISTS ingredientes(
+            id INTEGER PRIMARY KEY,
+            ingrediente TEXT NOT NULL)
+            ''')
+
     conexao.commit()
     conexao.close()
-    messagebox.showinfo("Ingrediente", "Ingrediente adicionado a lista.")
 
-# #buscar ingrediente
-# def buscar_ingrediente():
-#     global entry_busca_ingrediente
-
-#     ingrediente_procurado = entry_busca_ingrediente.get()
-
-#     if not ingrediente_procurado:
-#         messagebox.showwarning("Aviso", "Selecione uma linha para deletar.")
-#         return
-
-#     conexao = sqlite3.connect("ficha_tecnica.db")
-#     cursor = conexao.cursor()
-#     cursor.execute("SELECT * From ingredientes WHERE ingrediente = ?", (ingrediente_procurado,))
-#     resultado = cursor.fetchall()    
-#     conexao.commit()
-#     conexao.close()
-#     print(resultado)
-#     janela_top = tk.Toplevel()
-#     janela_top.geometry("500x500")
-#     janela_top.title("Resultado Busca")
-#     janela_top.resizable(False, False)
-
-#     tabela = ttk.Treeview(janela_top,columns=("id", "ingrediente") , show="headings", )
-    
-#     # largura das colunas
-#     tabela.column("id", width=5, anchor="w")  # Coluna 1 com 100 pixels
-#     tabela.column("ingrediente", width=250, anchor="w")  # Coluna 2 com 250 pixels
-
-#     # títulos das colunas
-#     tabela.heading("id", text="ID")
-#     tabela.heading("ingrediente", text="Ingredientes")
-
-#     # exibe a tabela
-#     tabela.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
-
-#     conexao = sqlite3.connect("ficha_tecnica.db")
-#     cursor = conexao.cursor()
-#     cursor.execute("SELECT * FROM ingredientes WHERE ingrediente LIKE ?", (f"%{ingrediente_procurado}%",))
-#     resultado = cursor.fetchall()
-
-#     for linha in resultado:
-#         tabela.insert('', tk.END, values=linha)    
-#     return resultado
+##########################  FUNÇÕES DE INGREDIENTES    ##########################
 
 def pesquisar_ingrediente():
 
@@ -113,7 +60,6 @@ def pesquisar_ingrediente():
         # Insere os resultados na tabela do Tkinter
         for linha in resultado:
             tabela_ingredientes.insert("", tk.END, values=linha)
-                
 
 #atualizar ingrediente
 def atualizar_ingrediente(ingrediente):
@@ -233,7 +179,6 @@ def abrir_popup_adicionar_ingrediente():
     botao_salvar = tk.Button(popup_adicionar_ingrediente, text="Salvar", command=cadastrar_ingrediente_banco)
     botao_salvar.pack(pady=15)
 
-
 # abre popup para edição do nome do ingrediente    
 def abrir_popup_editar_ingrediente():
     # 1. Verifica se há uma linha selecionada
@@ -293,34 +238,9 @@ def abrir_popup_editar_ingrediente():
     botao_salvar = tk.Button(popup_editar_ingrediente, text="Salvar", command=atualizar_ingrediente_banco)
     botao_salvar.pack(pady=15)
 
-# # Configuração da Janela Principal
-#     app = tk.Tk()
-#     app.title("Exibir SQLite no Tkinter")
-#     app.geometry("400x300")
+##########################   TELAS   ##########################
 
-#     # Criação do Treeview (Tabela)
-#     colunas = ("ID", "Nome", "Idade")
-#     tree = ttk.Treeview(app, columns=colunas, show="headings")
-
-#     # Definindo os cabeçalhos
-#     for col in colunas:
-#     tree.heading(col, text=col)
-#     tree.column(col, width=100)
-
-#     tree.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
-
-##########################   INTERFACE   ##########################
-
-
-##########################   FRAME PRINCIPAL   ##########################
-
-def tela_ficha():
-    limpar_janela()
-
-    janela.title("Ficha Técnica de Preparo")
-    janela.geometry("500x500")
-
-
+# tela ingredientes
 def tela_ingredientes():
 
     global entry_busca_ingrediente, tabela_ingredientes
@@ -335,26 +255,27 @@ def tela_ingredientes():
     label_titulo = tk.Label(frame_ingredientes, text=" 🍴 Ingredientes 👨‍🍳", font=("Arial", 24), bg="#FDC180")
     label_titulo.pack(pady=10)
 
-    frame_busca = tk.Frame(frame_ingredientes, borderwidth=1, relief="raised")
-    frame_busca.pack(pady=10)
+    frame_menu = tk.Frame(frame_ingredientes, borderwidth=1, relief="raised")
+    frame_menu.pack(pady=10)
 
-    entry_busca_ingrediente = tk.Entry(frame_busca)
+    # campo de busca de ingrdiente   
+    entry_busca_ingrediente = tk.Entry(frame_menu)
     entry_busca_ingrediente.pack(side="left", padx=10, pady=5)
 
     # botões da tela ingredientes
-    botao_deletar_ingrediente = tk.Button(frame_busca, text="Deletar", command=deletar_ingrediente)
+    botao_deletar_ingrediente = tk.Button(frame_menu, text="Deletar", command=deletar_ingrediente)
     botao_deletar_ingrediente.pack(side="right", padx=10, pady=5)
 
-    botao_editar_ingrediente = tk.Button(frame_busca, text="Editar", command=abrir_popup_editar_ingrediente)
+    botao_editar_ingrediente = tk.Button(frame_menu, text="Editar", command=abrir_popup_editar_ingrediente)
     botao_editar_ingrediente.pack(side="right", padx=10, pady=5)
 
-    botao_atualizar_tabela_ingredientes = tk.Button(frame_busca, text="Atualizar Lista", command=atualizar_tabela_ingredientes)
+    botao_atualizar_tabela_ingredientes = tk.Button(frame_menu, text="Atualizar Lista", command=atualizar_tabela_ingredientes)
     botao_atualizar_tabela_ingredientes.pack(side="right", padx=10, pady=5) 
 
-    botao_cadastrar_ingrediente = tk.Button(frame_busca, text="Adicionar", command=abrir_popup_adicionar_ingrediente)
+    botao_cadastrar_ingrediente = tk.Button(frame_menu, text="Adicionar", command=abrir_popup_adicionar_ingrediente)
     botao_cadastrar_ingrediente.pack(side="right", padx=10, pady=5)
 
-    botao_pesquisar_ingrediente = tk.Button(frame_busca, text="Pesquisar", command=pesquisar_ingrediente)
+    botao_pesquisar_ingrediente = tk.Button(frame_menu, text="Pesquisar", command=pesquisar_ingrediente)
     botao_pesquisar_ingrediente.pack(side="right", padx=10, pady=5)
 
     estilo = ttk.Style()
@@ -366,8 +287,8 @@ def tela_ingredientes():
     tabela_ingredientes = ttk.Treeview(frame_ingredientes,columns=("id", "ingrediente") , show="headings", )
 
     # largura das colunas
-    tabela_ingredientes.column("id", width=5, anchor="w")  # Coluna 1 com 100 pixels
-    tabela_ingredientes.column("ingrediente", width=250, anchor="w")  # Coluna 2 com 250 pixels
+    tabela_ingredientes.column("id", width=5, anchor="w")   # Coluna 1 com 100 pixels
+    tabela_ingredientes.column("ingrediente", width=250, anchor="w")    # Coluna 2 com 250 pixels
 
     # títulos das colunas
     tabela_ingredientes.heading("id", text="ID")
@@ -386,15 +307,27 @@ def tela_ingredientes():
 
     # Seleciona as colunas id e ingrediente da tabela
     cursor.execute("SELECT id, ingrediente FROM ingredientes")
-
     conexao.close()
 
-def tela_resultado_busca():
+# tela ficha
+def tela_ficha():
+
     limpar_janela()
 
-    janela.title("Resultado da Busca")
-    janela.geometry("500x500")
-        
+    # frame da tela ficha
+    frame_ficha = tk.Frame(janela, borderwidth=1, relief="raised", bg="#FDC180")
+    frame_ficha.pack(fill="both", expand=True)
+
+    # título da tela ingredientes
+    label_titulo = tk.Label(frame_ficha, text=" 🍴 Ficha Técnica de Preparo 👨‍🍳", font=("Arial", 24), bg="#FDC180")
+    label_titulo.pack(pady=10)
+
+    frame_menu = tk.Frame(frame_ficha, borderwidth=1, relief="raised")
+    frame_menu.pack(pady=10)    
+
+##########################   INÍCIO   ##########################
+
+conectar_banco_dados()
 
 # cria a janela principal
 janela = tk.Tk()
@@ -402,20 +335,6 @@ janela.title("Maedu")
 janela.geometry("700x500")
 janela.resizable(False, False)
 
-tela_ingredientes()
-
-# exibe dados na tabela
-#busca_dados_tabela()
+tela_ficha()
 
 janela.mainloop()
-
-
-##########################   FRAME INGREDIENTES   ##########################
-
-
-
-##########################   FRAME BUSCA   ##########################
-
-
-
-        
