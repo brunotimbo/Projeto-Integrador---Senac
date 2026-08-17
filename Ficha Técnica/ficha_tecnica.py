@@ -3,10 +3,11 @@ import sqlite3
 import tkinter as tk
 import tkinter.messagebox as messagebox                         # mensgens de aviso
 from tkinter import ttk                                         # importar subbliboteca do tkinter para tabela
-
+from tkinter import filedialog as filedialog
 
 # variáveis globais
 entry_busca_ingrediente = None
+caminho_imagem = ""
 
 def conectar_banco_dados():
     # conexão com banco de dados
@@ -16,13 +17,22 @@ def conectar_banco_dados():
     # cria tabela ficha técnica
     cursor.execute('''CREATE TABLE IF NOT EXISTS fichas(
             id INTEGER PRIMARY KEY,
-            ingrediente TEXT NOT NULL,
+	        nome_preparo TEXT NOT NULL,
+            imagem BLOB,
+            nome_profissional TEXT,
+            data_criacao TEXT DEFAULT (datetime('now', 'localtime')),
+            data_atualizacao TEXT DEFAULT (datetime('now', 'localtime')),
+            lista_ingredientes TEXT NOT NULL,
             quantidade_comprada INTEGER,
-            valor_comprado REAL,
-            quantidade_usada INTEGER,
-            unidade_medida TEXT,
-            valor_gasto REAL)
-            ''')
+            valor_comprado_ingrediente REAL,
+            quantidade_usada_ingrediente INTEGER,
+            unidade_medida TEXT NOT NULL,
+            valor_gasto_ingrediente REAL,
+	        custo total REAL,          
+	        porcoes REAL,
+	        custo_porcao REAL,
+	        modo_preparo TEXT) 
+    ''')
 
     # cria tabela ingredientes
     cursor.execute('''CREATE TABLE IF NOT EXISTS ingredientes(
@@ -238,6 +248,276 @@ def abrir_popup_editar_ingrediente():
     botao_salvar = tk.Button(popup_editar_ingrediente, text="Salvar", command=atualizar_ingrediente_banco)
     botao_salvar.pack(pady=15)
 
+##########################  FUNÇÕES DE FICHA    ##########################
+
+def buscar_ingredientes_por_nome(texto_digitado):
+    conexao = sqlite3.connect('ficha_tecnica.db')
+    cursor = conexao.cursor()
+    cursor.execute("SELECT ingrediente FROM ingredientes WHERE ingrediente LIKE ? ORDER BY ingrediente LIMIT 10", (f"%{texto_digitado}%",))
+    resultados = [linha[0] for linha in cursor.fetchall()]
+    conexao.close()
+    return resultados
+
+
+def abrir_popup_adicionar_ingrediente_ficha():
+    popup_adicionar_ingrediente_ficha = tk.Toplevel()
+    popup_adicionar_ingrediente_ficha.title("Ingrediente na Ficha")
+    popup_adicionar_ingrediente_ficha.geometry("700x200")
+    # Bloqueia a janela principal até fechar o pop-up
+    popup_adicionar_ingrediente_ficha.grab_set()
+
+    frame_busca = tk.Frame(popup_adicionar_ingrediente_ficha)
+    frame_busca.pack(padx=10, fill="x")
+
+
+    entry_ingrediente = tk.Entry(frame_busca, width=40)
+    entry_ingrediente.pack(fill="x")
+
+    # Listbox de sugestões - começa escondida
+    lista_sugestoes = tk.Listbox(popup_adicionar_ingrediente_ficha, height=5)
+ 
+ 
+    def mostrar_sugestoes(event=None):
+        texto = entry_ingrediente.get().strip()
+    
+        if texto == "":
+            lista_sugestoes.pack_forget()
+            return
+    
+        resultados = buscar_ingredientes_por_nome(texto)
+    
+        lista_sugestoes.delete(0, "end")
+    
+        if not resultados:
+            lista_sugestoes.pack_forget()
+            return
+    
+        for item in resultados:
+            lista_sugestoes.insert("end", item)
+    
+        # exibe a listbox logo abaixo do campo de busca, só se ainda não estiver visível
+        if not lista_sugestoes.winfo_ismapped():
+            lista_sugestoes.pack(padx=10, fill="x", after=frame_busca)
+    
+    
+    def selecionar_sugestao(event):
+        if not lista_sugestoes.curselection():
+            return
+        valor_selecionado = lista_sugestoes.get(lista_sugestoes.curselection())
+    
+        entry_ingrediente.delete(0, "end")
+        entry_ingrediente.insert(0, valor_selecionado)
+    
+        lista_sugestoes.pack_forget()
+    
+    
+    def esconder_sugestoes_ao_perder_foco(event):
+        # pequeno delay pra dar tempo do clique na listbox ser processado antes de esconder
+        janela.after(150, lista_sugestoes.pack_forget)
+    
+    
+    entry_ingrediente.bind("<KeyRelease>", mostrar_sugestoes)
+    lista_sugestoes.bind("<<ListboxSelect>>", selecionar_sugestao)
+    entry_ingrediente.bind("<FocusOut>", esconder_sugestoes_ao_perder_foco)
+
+# Elementos visuais do Pop-up
+    label6 = tk.Label(popup_adicionar_ingrediente_ficha, text="Quantidade comprada:")
+    label6.pack(pady=10)
+    entry_adicionar_quantidade_comprada_ficha = tk.Entry(popup_adicionar_ingrediente_ficha, width=30)
+    entry_adicionar_quantidade_comprada_ficha.pack(pady=5)
+
+# Elementos visuais do Pop-up
+    label7 = tk.Label(popup_adicionar_ingrediente_ficha, text="Valor comprado:")
+    label7.pack(pady=10)
+    entry_adicionar_valor_comprado_ficha = tk.Entry(popup_adicionar_ingrediente_ficha, width=30)
+    entry_adicionar_valor_comprado_ficha.pack(pady=5)
+
+# Elementos visuais do Pop-up
+    label8 = tk.Label(popup_adicionar_ingrediente_ficha, text="Quantidade usada:")
+    label8.pack(pady=10)
+    entry_adicionar_quantidade_usada_ficha = tk.Entry(popup_adicionar_ingrediente_ficha, width=30)
+    entry_adicionar_quantidade_usada_ficha.pack(pady=5)
+
+# Elementos visuais do Pop-up
+    label9 = tk.Label(popup_adicionar_ingrediente_ficha, text="Unidade de medida:")
+    label9.pack(pady=10)
+    entry_adicionar_unidade_medida_ficha = tk.Entry(popup_adicionar_ingrediente_ficha, width=30)
+    entry_adicionar_unidade_medida_ficha.pack(pady=5)
+
+
+
+
+def abrir_popup_editar_ingrediente_ficha():
+    pass
+
+def abrir_popup_excluir_ingrediente_ficha():
+    pass
+
+
+def selecionar_imagem():
+    global caminho_imagem
+    # Abre o explorador de arquivos para escolher a imagem
+    caminho_imagem = filedialog.askopenfilename(
+        title="Selecione uma imagem",
+        filetypes=[("Arquivos de Imagem", "*.jpg *.jpeg *.png")]
+    )
+    if caminho_imagem:
+        lbl_status.config(text=f"Selecionado: {caminho_imagem.split('/')[-1]}")
+
+# abre pop-up adicionar ingrediente
+def abrir_popup_adicionar_ficha():
+    popup_adicionar_ficha = tk.Toplevel()
+    popup_adicionar_ficha.title("Nova Ficha Técnica")
+    popup_adicionar_ficha.geometry("700x700")
+    # Bloqueia a janela principal até fechar o pop-up
+    popup_adicionar_ficha.grab_set()
+
+    # frame do popup adicionar ficha
+    frame_popup = tk.Frame(popup_adicionar_ficha, borderwidth=1, relief="raised")
+    frame_popup.pack(fill="both", expand=True)
+
+    frame_popup_cabecalho = tk.Frame(frame_popup, borderwidth=1, relief="raised")
+    frame_popup_cabecalho.pack(fill="both", expand=True)    
+
+    # ---------- COLUNA DA ESQUERDA (imagem) ----------
+    frame_esquerda = tk.Frame(frame_popup_cabecalho, width=200, height=200, borderwidth=1, relief="solid")
+    frame_esquerda.pack(side="left", padx=10, pady=10, anchor="n", fill="both")
+    frame_esquerda.pack_propagate(False)  # mantém tamanho fixo mesmo sem imagem
+
+    # Botão que funciona como widget para inserir a imagem
+    botao_imagem = tk.Button(frame_esquerda, text="Escolher Imagem", command=selecionar_imagem)
+    botao_imagem.pack(pady=10, expand=True)
+
+    lbl_status = tk.Label(frame_esquerda, text="Nenhuma imagem selecionada", fg="gray")
+    lbl_status.pack(pady=5)
+
+    # ---------- COLUNA DA DIREITA (campos de digitação) ----------
+    frame_direita = tk.Frame(frame_popup_cabecalho, borderwidth=1, relief="solid")
+    frame_direita.pack(fill="both", expand=True, padx=10, pady=10)    
+
+
+    def criar_campo(frame_pai, texto_label, largura_entry=20):
+        frame_campo = tk.Frame(frame_pai, borderwidth="1", relief="solid")
+        frame_campo.pack(padx=10)
+        label = tk.Label(frame_campo, text=texto_label)
+        label.pack(anchor="w")
+        entry = tk.Entry(frame_campo, width=largura_entry)
+        entry.pack(anchor="w", pady=5)
+
+        return entry
+
+    entry_adicionar_nome_preparo = criar_campo(frame_direita, "Nome do preparo:", 30)
+    entry_adicionar_profissional = criar_campo(frame_direita, "Profissional responsável:", 30)
+
+    frame_popup_menu_tabela = tk.Frame(frame_popup, borderwidth=1, relief="raised")
+    frame_popup_menu_tabela.pack(fill="both", expand=True) 
+
+    # botões da tela ingredientes
+    botao_incluir_ingrediente_ficha = tk.Button(frame_popup_menu_tabela, text="Incluir Ingrediente", command=abrir_popup_adicionar_ingrediente_ficha)
+    botao_incluir_ingrediente_ficha.pack( padx=10, pady=5)
+
+    botao_incluir_ingrediente_ficha = tk.Button(frame_popup_menu_tabela, text="Incluir Ingrediente", command=abrir_popup_editar_ingrediente_ficha)
+    botao_incluir_ingrediente_ficha.pack( padx=10, pady=5)
+
+    botao_retirar_ingrediente_ficha = tk.Button(frame_popup_menu_tabela, text="Retirar Ingrediente", command=tela_ficha)
+    botao_retirar_ingrediente_ficha.pack(padx=10, pady=5)
+
+    frame_popup_tabela = tk.Frame(frame_popup, borderwidth=1, relief="raised")
+    frame_popup_tabela.pack(fill="both", expand=True) 
+    
+
+
+# # Elementos visuais do Pop-up
+#     label1 = tk.Label(frame_popup_1, text="Nome do preparo:")
+#     label1.pack(side="left")
+#     entry_adicionar_nome_preparo_ficha = tk.Entry(frame_popup_1, width=30)
+#     entry_adicionar_nome_preparo_ficha.pack(side="left", pady=5)
+# # Elementos visuais do Pop-up
+#     label2 = tk.Label(frame_popup_1, text="Profissional responsável:")
+#     label2.pack(side="left")
+#     entry_adicionar_profissional_ficha = tk.Entry(frame_popup_1, width=30)
+#     entry_adicionar_profissional_ficha.pack(side="left", pady=5)
+
+# # Elementos visuais do Pop-up
+#     label3 = tk.Label(frame_popup_1, text="Data de criação:")
+#     label3.pack()
+#     entry_adicionar_data_criacao_ficha = tk.Entry(frame_popup_1, width=30)
+#     entry_adicionar_data_criacao_ficha.pack(pady=5)
+
+# # Elementos visuais do Pop-up
+#     label4 = tk.Label(frame_popup_1, text="Data de atualização:")
+#     label4.pack()
+#     entry_adicionar_data_atualizacao_ficha = tk.Entry(frame_popup_1, width=30)
+#     entry_adicionar_data_atualizacao_ficha.pack(pady=5)
+
+# Elementos visuais do Pop-up
+    label5 = tk.Label(popup_adicionar_ficha, text="Lista de ingredientes:")
+    label5.pack(pady=10)
+    entry_adicionar_lista_ingredientes_ficha = tk.Entry(popup_adicionar_ficha, width=30)
+    entry_adicionar_lista_ingredientes_ficha.pack(pady=5)
+
+# Elementos visuais do Pop-up
+    label6 = tk.Label(popup_adicionar_ficha, text="Quantidade comprada:")
+    label6.pack(pady=10)
+    entry_adicionar_quantidade_comprada_ficha = tk.Entry(popup_adicionar_ficha, width=30)
+    entry_adicionar_quantidade_comprada_ficha.pack(pady=5)
+
+# Elementos visuais do Pop-up
+    label7 = tk.Label(popup_adicionar_ficha, text="Valor comprado:")
+    label7.pack(pady=10)
+    entry_adicionar_valor_comprado_ficha = tk.Entry(popup_adicionar_ficha, width=30)
+    entry_adicionar_valor_comprado_ficha.pack(pady=5)
+
+# Elementos visuais do Pop-up
+    label8 = tk.Label(popup_adicionar_ficha, text="Quantidade usada:")
+    label8.pack(pady=10)
+    entry_adicionar_quantidade_usada_ficha = tk.Entry(popup_adicionar_ficha, width=30)
+    entry_adicionar_quantidade_usada_ficha.pack(pady=5)
+
+# Elementos visuais do Pop-up
+    label9 = tk.Label(popup_adicionar_ficha, text="Unidade de medida:")
+    label9.pack(pady=10)
+    entry_adicionar_unidade_medida_ficha = tk.Entry(popup_adicionar_ficha, width=30)
+    entry_adicionar_unidade_medida_ficha.pack(pady=5)
+
+# Elementos visuais do Pop-up
+#     label10 = tk.Label(popup_adicionar_ficha, text="Porções:")
+#     label10.pack(pady=10)
+#     entry_adicionar_porcoes_ficha = tk.Entry(popup_adicionar_ficha, width=30)
+#     entry_adicionar_porcoes_ficha.pack(pady=5)
+
+# # Elementos visuais do Pop-up
+#     label11 = tk.Label(popup_adicionar_ficha, text="Modo de preparo")
+#     label11.pack(pady=10)
+#     entry_adicionar_modo_preparo_ficha = tk.Entry(popup_adicionar_ficha, width=30)
+#     entry_adicionar_modo_preparo_ficha.pack(pady=5)
+
+    # def cadastrar_ficha_banco():
+    #     novo_ingrediente = entry_adicionar_ingrediente.get().strip()
+
+    #     if not novo_ingrediente:
+    #         messagebox.showwarning("Aviso", "O campo não pode ficar vazio!")
+    #         return
+        
+    #     else:
+    #         # Atualiza no Banco de Dados SQLite3
+    #         conexao = sqlite3.connect("ficha_tecnica.db")
+    #         cursor = conexao.cursor()
+    #         cursor.execute("INSERT INTO ingredientes (ingrediente) VALUES (?)", (novo_ingrediente,))
+    #         conexao.commit()
+    #         conexao.close()    
+
+    #         # Atualiza a linha visualmente na tabela Tkinter
+    #         atualizar_tabela_ingredientes()
+
+    #         # Fecha o pop-up e avisa o usuário
+    #         abrir_popup_adicionar_ficha.destroy()
+    #         messagebox.showinfo("Sucesso", "Ficha Técnica adicionada com sucesso.")
+
+    # Botão Salvar dentro do Pop-up
+    # botao_salvar_ficha = tk.Button(abrir_popup_adicionar_ficha, text="Salvar")
+    # botao_salvar_ficha.pack(pady=15)
+
 ##########################   TELAS   ##########################
 
 # tela ingredientes
@@ -315,6 +595,8 @@ def tela_ingredientes():
 # tela ficha
 def tela_ficha():
 
+    global lbl_status
+
     limpar_janela()
 
     # frame da tela ficha
@@ -325,12 +607,113 @@ def tela_ficha():
     label_titulo = tk.Label(frame_ficha, text=" 🍴 Ficha Técnica de Preparo 👨‍🍳", font=("Arial", 24), bg="#FDC180")
     label_titulo.pack(pady=10)
 
-    frame_menu = tk.Frame(frame_ficha, borderwidth=1, relief="raised")
-    frame_menu.pack(pady=10)
+    frame_menu_ficha = tk.Frame(frame_ficha, borderwidth=1, relief="raised")
+    frame_menu_ficha.pack(pady=10)
+
+    # campo de busca de ingrdiente   
+    entry_busca_ficha = tk.Entry(frame_menu_ficha)
+    entry_busca_ficha.pack(side="left", padx=10, pady=5)    
 
     # botões da tela ficha
-    botao_ingredientes = tk.Button(frame_menu, text="Ingredientes", command=tela_ingredientes)
-    botao_ingredientes.pack(side="right", padx=10, pady=5)    
+    botao_ingredientes = tk.Button(frame_menu_ficha, text="Ingredientes", command=tela_ingredientes)
+    botao_ingredientes.pack(side="right", padx=10, pady=5)
+
+    botao_deletar_ficha = tk.Button(frame_menu_ficha, text="Deletar", command=deletar_ingrediente, bg="#da2222")
+    botao_deletar_ficha.pack(side="right", padx=10, pady=5)
+    
+    botao_editar_ficha = tk.Button(frame_menu_ficha, text="Editar", command=abrir_popup_editar_ingrediente, bg="#dac722")
+    botao_editar_ficha.pack(side="right", padx=10, pady=5)
+
+    botao_cadastrar_ficha = tk.Button(frame_menu_ficha, text="Adicionar", command=abrir_popup_adicionar_ficha , bg="#22da50")
+    botao_cadastrar_ficha.pack(side="right", padx=10, pady=5) 
+
+    botao_pesquisar_ficha = tk.Button(frame_menu_ficha, text="Pesquisar")
+    botao_pesquisar_ficha.pack(side="right", padx=10, pady=5)
+
+   # ------------- FRAME PRINCIPAL -------------------------------
+    frame_principal = tk.Frame(frame_ficha, borderwidth=1, relief="solid")
+    frame_principal.pack(padx=10, pady=10)
+
+    # ---------- COLUNA DA ESQUERDA (imagem) ----------
+    frame_esquerda = tk.Frame(frame_principal, width=200, height=200, borderwidth=1, relief="solid")
+    frame_esquerda.pack(side="left", padx=10, pady=10, anchor="n", fill="both")
+    frame_esquerda.pack_propagate(False)  # mantém tamanho fixo mesmo sem imagem
+
+    # Botão que funciona como widget para inserir a imagem
+    botao_imagem = tk.Button(frame_esquerda, text="Escolher Imagem", command=selecionar_imagem)
+    botao_imagem.pack(pady=10, expand=True)
+
+    lbl_status = tk.Label(frame_esquerda, text="Nenhuma imagem selecionada", fg="gray")
+    lbl_status.pack(pady=5)
+
+    # ---------- COLUNA DA DIREITA (campos de digitação) ----------
+    frame_direita = tk.Frame(frame_principal, borderwidth=1, relief="solid")
+    frame_direita.pack(fill="both", expand=True, padx=10, pady=10)
+ 
+    tk.Label(frame_direita, text="Nome do preparo:").pack(anchor="w", pady=(0, 2))
+    entry_nome_preparo = tk.Entry(frame_direita, width=30)
+    entry_nome_preparo.pack(anchor="w", pady=(0, 10))
+
+    tk.Label(frame_direita, text="Profissional:").pack(anchor="w", pady=(0, 2))
+    entry_nome_profissional = tk.Entry(frame_direita, width=30)
+    entry_nome_profissional.pack(anchor="w", pady=(0, 10))
+
+    tk.Label(frame_direita, text="Criação:").pack(anchor="w", pady=(0, 2))
+    entry_data_criacao = tk.Entry(frame_direita, width=30)
+    entry_data_criacao.pack(anchor="w", pady=(0, 10))
+
+    tk.Label(frame_direita, text="Atualização:").pack(anchor="w", pady=(0, 2))
+    entry_data_atualizacao = tk.Entry(frame_direita, width=30)
+    entry_data_atualizacao.pack(anchor="w", pady=(0, 10))
+
+    # ---------- FRAME TABELA FICHA ----------
+
+    # cria tabela
+    tabela_ficha = ttk.Treeview(frame_ficha,columns=(
+                                                    "lista_ingredientes",
+                                                    "quantidade_comprada",
+                                                    "valor_comprado_ingrediente",
+                                                    "quantidade_usada_ingrediente",
+                                                    "unidade_medida",
+                                                    "valor_gasto_ingrediente") ,
+                                                    show="headings", )
+
+    # largura das colunas
+    tabela_ficha.column("lista_ingredientes", width=50, anchor="w")   
+    tabela_ficha.column("quantidade_comprada", width=50, anchor="w")    
+    tabela_ficha.column("valor_comprado_ingrediente", width=50, anchor="w")    
+    tabela_ficha.column("quantidade_usada_ingrediente", width=50, anchor="w")    
+    tabela_ficha.column("unidade_medida", width=50, anchor="w")    
+    tabela_ficha.column("valor_gasto_ingrediente", width=50, anchor="w")   
+
+    # títulos das colunas
+    tabela_ficha.heading("lista_ingredientes", text="Ingredientes")   
+    tabela_ficha.heading("quantidade_comprada", text="Qtd Comprada")    
+    tabela_ficha.heading("valor_comprado_ingrediente", text="Valor Comprado")    
+    tabela_ficha.heading("quantidade_usada_ingrediente", text="Qtd Usada")    
+    tabela_ficha.heading("unidade_medida", text="Medida")    
+    tabela_ficha.heading("valor_gasto_ingrediente", text="Valor Gasto")
+
+    conexao = sqlite3.connect("ficha_tecnica.db")
+    cursor = conexao.cursor()
+    cursor.execute("SELECT * FROM fichas")
+    resultado = cursor.fetchall()
+
+    for linha in resultado:
+        tabela_ficha.insert('', tk.END, values=linha)
+
+    # Seleciona as colunas id e ingrediente da tabela
+    cursor.execute("SELECT lista_ingredientes, quantidade_comprada,  valor_comprado_ingrediente,  quantidade_usada_ingrediente, unidade_medida, valor_gasto_ingrediente FROM fichas")
+    conexao.close()  
+    
+
+    # exibe a tabela
+    tabela_ficha.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+ 
+    # frame_tabela_ficha = tk.Frame(frame_ficha, borderwidth=1, relief="solid")
+    # frame_tabela_ficha.pack(padx=10, pady=10)
+    
+    
 
 ##########################   INÍCIO   ##########################
 
@@ -339,7 +722,7 @@ conectar_banco_dados()
 # cria a janela principal
 janela = tk.Tk()
 janela.title("Maedu")
-janela.geometry("700x500")
+janela.geometry("700x700")
 janela.resizable(False, False)
 
 tela_ficha()
